@@ -1,0 +1,19 @@
+---
+title: 'LPJ-GUESS: Past Forests of North Eastern United States'
+author: "Charlotte Uden"
+date: "June 25 2019"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+* [New England lpj-guess test run output](firstRun.html)
+* [Exploring fire in LPJ-GUESS](ExploringFire.html)
+
+![](IMG_4611.JPG)
+
