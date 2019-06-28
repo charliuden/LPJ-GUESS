@@ -14,8 +14,8 @@
 
 nhTrees <- read.csv("/Users/charlotteuden/Desktop/trees/data/FIA/NH_TREE.csv")
 vtTrees <- read.csv("/Users/charlotteuden/Desktop/trees/data/FIA/VT_TREE.csv")
-head(vtTrees)
-nrow(vtTrees)
+head(vtTrees) #this is a massive data set (162354 rows and 207 columns), so i need to subset it. 
+vtTrees2 <- c(vtTrees$CN, vtTrees$PLT_CN, vtTrees$INVYR, vtTrees$PLOT, vtTrees$TREE, vtTrees$SPCD, vtTrees$DIA, 
 
 colnames(vtTrees)
 head(vtTrees$SPCD)#species names is by number: 541=white ash, 531=american beech, etc. 

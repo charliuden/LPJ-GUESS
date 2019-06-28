@@ -1,0 +1,80 @@
+---
+title: "Forest Inventory and Analysis (FIA) data"
+author: "Charlotte Uden"
+date: "6/27/2019"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+[*Back to index*](Index.html)
+
+The FIA dataset is open source. But if I want to get a spatial representation of the data, I have to build the code and then match the 'CN' number to the coordinate point. 
+
+
+```{r}
+nhTrees <- read.csv("FIA/NH_TREE.csv")
+vtTrees <- read.csv("FIA/VT_TREE.csv")
+
+colnames(vtTrees)
+```
+
+This is a massive data set (162354 rows and 207 columns), so I need to subset for the stuff i think I'll actually use. This may change as I decide what I want my output for LPJ-GUESS to be, but for now I'll choose the serial number (CN and PLOT_CN), year (INVYR), plot number (PLOT), tree number (TREE), species (SPCD) and diameter (DIA). 
+
+For information on what each column is and the codes within each column (ie. species names is by number: 541=white ash, 531=american beech), go to:
+
+https://www.fia.fs.fed.us/library/database-documentation/index.php
+
+
+```{r}
+####################
+# FUNCTION: FIACleanUp
+# INPUTS: output from LPJ-GUESS (ie. anpp.out). this is specific to global PFT's.
+# OUTPUTS: correctly named columns with numeric data
+#------------------------------
+FIACleanUp <- function(table=x){
+  table2 <- data.frame(matrix(data=c(table$CN, table$PLT_CN, table$INVYR, table$PLOT, table$TREE, table$SPCD, table$DIA), ncol=7))
+  names(table2) <- c("CT", "PLT_CN", "INVYR", "PLOT", "TREE", "SPCD", "DIA")
+  return(table2)
+}
+#------------------------------
+
+
+vtTrees2 <- FIACleanUp(table=vtTrees)
+head(vtTrees2)
+
+#add column of tallies for species richness
+#library(expss)
+#library(patchwork)
+  #table3  <- modify(table2, {
+    #richness = count_row_if(gt(0), wit[7:30])
+  #})
+
+
+
+# FUNCTION: SpeciesTally
+# INPUTS:  table of speceis for each coordinate point, for each year
+# OUTPUTS: 3 column table: year, species, tally of presence of that species
+#------------------------------
+#SpecesTally <- function(table=x){
+  #table <- melt(data = table, id.vars = "year", measure.vars = c('BNE',  'BINE', 'BNS', 'TeNE', 'TeBS', 'IBS', 'TeBE', 'TrBE', 'TrIBE', 'TrBR',   'C3G', 'C4G'))
+  #table <- with(table, aggregate(value, by = list(year, variable), 
+                                    #FUN = "sum")) #find sum of anpp for that PFT across all coordinate points
+  #names(table) <- c("year", "PFT", "sum.value") #rename columns
+  #return(table)
+#}
+#------------------------------
+
+
+
+
+```
+
+
+
+

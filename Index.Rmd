@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 * [New England lpj-guess test run output](firstRun.html)
+* [Forest Inventory and Analysis (FIA)](FIA.html)
 * [Exploring fire in LPJ-GUESS](ExploringFire.html)
 * [Witness Tree dataset (Adv. computaitons in Life sci. final)](cuden_NR395_finalPaper.html)
 
