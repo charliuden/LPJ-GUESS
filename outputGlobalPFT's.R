@@ -24,7 +24,7 @@ library(scatterpie) #make map of pie charts
 
 
 
-anpp <- read.table("New England lpj-guess test run/anpp.out", stringsAsFactors=FALSE)
+anpp <- read.table("/Users/charlotteuden/Desktop/trees/LPJ-GUESS/NewEngland_lpj-guessTestRun/anpp.out", stringsAsFactors=FALSE)
 
 head(anpp) #column names are weird -first row should be col names. all data are factors
 str(anpp)
@@ -110,7 +110,7 @@ anppTime
 
 
 #read in data:
-cmass <- read.table("New England lpj-guess test run/cmass.out", stringsAsFactors=FALSE)
+cmass <- read.table("NewEngland_lpj-guessTestRun/cmass.out", stringsAsFactors=FALSE)
 
 #head(cmass) 
 #str(cmass) #looks like the same problem: non numerica data, columns incorrectly labeled
@@ -151,7 +151,7 @@ cmassTime
 
 
 #read in data:
-cpool <- read.table("New England lpj-guess test run/cpool.out", stringsAsFactors=FALSE)
+cpool <- read.table("NewEngland_lpj-guessTestRun/cpool.out", stringsAsFactors=FALSE)
 
 #same problem (column names are wrong and non numerica data) but need to use different names. 
 
@@ -216,7 +216,7 @@ cpoolTime
 
 
 #read in data:
-dens <- read.table("New England lpj-guess test run/dens.out", stringsAsFactors=FALSE)
+dens <- read.table("NewEngland_lpj-guessTestRun/dens.out", stringsAsFactors=FALSE)
 #head(dens)
 
 #same problem (column names are wrong and non numerica data) but need to use different names. 
@@ -257,7 +257,7 @@ densTime
 
 
 #read in data:
-firert <- read.table("New England lpj-guess test run/firert.out", stringsAsFactors=FALSE)
+firert <- read.table("NewEngland_lpj-guessTestRun/firert.out", stringsAsFactors=FALSE)
 
 ####################
 # FUNCTION: firertCleanUp
@@ -318,7 +318,7 @@ firertTime
 
 
 #read in data:
-height <- read.table("New England lpj-guess test run/height.out", stringsAsFactors=FALSE)
+height <- read.table("NewEngland_lpj-guessTestRun/height.out", stringsAsFactors=FALSE)
 
 ####################
 # FUNCTION: heightCleanUp

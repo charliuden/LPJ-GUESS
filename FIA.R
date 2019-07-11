@@ -166,7 +166,7 @@ anyNA(vtTrees4) #find out if therea are any NA values. you have to do this BEFOR
 vtTrees5 <-  vtTrees4[complete.cases(vtTrees4[3]),] #remove NA values in BA column 
 anyNA(vtTrees5)#no NA'ss!
 
-#use aggregate() to find the sum basa area for each species for each year
+#use aggregate() to find the sum basal area for each species for each year
 vtTrees6 <- with(vtTrees5, aggregate(BA, by = list(INVYR, SPCD), 
                                      FUN = "sum")) 
 

@@ -6,7 +6,7 @@
 #5/10/2019
 #---
   
-wit <- read.csv("witness tree /583NewEngland%.csv")
+wit <- read.csv("witness_tree /583NewEngland%.csv")
 library(mapdata)
 library(maps)
 library(ggplot2)
