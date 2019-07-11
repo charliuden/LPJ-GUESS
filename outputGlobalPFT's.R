@@ -376,3 +376,125 @@ map2014height <- ggplot() +
 map1901height
 map2014height
 heightTime
+
+#-----------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+#----------------------------adding information to the maps-----------------------------
+#-----------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+
+library(tmap)
+library(mapdata)
+library(maps)
+library(ggplot2)
+library(dplyr)
+
+#----------------------State Boundaries------------------------------------------------------
+
+states <- map_data("state")#turn state line map into data frame
+northeast <- subset(states, region %in% c("vermont", "new hampshire", "connecticut", "maine", "rhode island", "massachusetts", "new york"))#subest new england states
+
+#map with states and lpj-guess output: anpp
+map <- ggplot() + 
+  geom_polygon(data = northeast, aes(x=long, y = lat, group = group), fill='gray70', color='white') +
+  coord_fixed(1.3) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G'), color='white') +
+  coord_fixed() + 
+  scale_fill_manual(values=chiz) + 
+  ggtitle("1901: anual net primary production")
+
+map
+
+#--------------converting data frames to a structural feature (sf) object---------------------------
+
+#I need to convert my data frame into an sf (simple featrues) object. sf objects can be treated as a regular data frame, but have a geometry column -coordinates. Like a 'spatial data frame' the package tmap uses sf objects, not regular old data frames. 
+
+library(sf)
+library(raster)
+library(dplyr)
+library(stringr) # for working with strings (pattern matching)
+
+str(anpp) #data frame
+
+####################
+# FUNCTION: crsConvert
+# INPUTS: output from LPJ-GUESS 
+# OUTPUTS: data frame converted to structural feature object with lat and long converted to WGS 84 coordinate system
+#------------------------------
+sfConvert <- function(table=x){
+  #use st_as_sf() to convert data frame to sf object: 
+  table <- st_as_sf(table, coords = c("Lon", "Lat"), 
+                      crs = 26919, agr = "constant") 
+  #crs 26919 refers to UTM NAD83 zone 19N, but you can set the coordiate reference system to whatever. 
+  return(table)
+} 
+
+#------------------------------
+
+anpp_sf <- sfConvert(table=anpp)
+
+st_crs(anpp_sf) #tells you what coordinate reference system the sf is in. 
+#the cool thing about potting sf objects is that by default, all attributes will individually be plotted:
+plot(anpp_sf)
+
+#convert polygons for new england to sf objects: 
+northeast_sf <- st_as_sf(new_england, coords = c("long", "lat"), 
+                  crs = 26919, agr = "constant")
+
+#using package tmap:
+state_outline <- tm_shape(northeast_sf) + tm_dots(col="grey", border.col="white")# this is not a polygon shapefile...
+state_outline + tm_shape(anpp_sf) + tm_dots(col="BINE", size=1, style="fisher")
+
+#using just the plot fuction
+plot(northeast_sf)
+plot(anpp_sf)
+
+#using ggplot:
+ggplot(data=northeast_sf) + geom_sf() + geom_sf(data=anpp_sf)
+
+#can i mix sf objects and reguar data frams in one plot?
+ggplot() + geom_polygon(data = northeast, aes(x=long, y = lat, group = group), fill='gray70', color='white') + geom_sf(data=anpp_sf) #yes!
+
+#I'm starting to think that ggplot is better than tmap... at least for what I'm doing. 
+
+library("ggspatial") #for north arrow and scale bar
+#change crs of world dataset: 
+world_sf <- st_as_sf(world, coords = c("long", "lat"), 
+                         crs = 26919, agr = "constant")
+
+
+data <- ggplot() + geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G'), color='white') +
+  coord_fixed() + 
+  scale_fill_manual(values=chiz) + 
+  ggtitle("1901: anual net primary production")
+
+data + geom_sf(data=world_sf, color = "white", fill = "gray70", alpha=0.2) +
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  coord_sf(xlim = c(-80,-66), ylim = c(40,48), expand = FALSE)
+
+
+
+
+
+#--------------ELEVATION-------------------
+
+#Uhttps://www.usgs.gov/centers/eros/science/usgs-eros-archive-digital-elevation-shuttle-radar-topography-mission-srtm-1-arc?qt-science_center_objects=0#qt-science_center_objects
+
+require(rgdal)
+require(maptools)
+require(raster)
+
+myproj  <- "+proj=utm +zone=12 +north +ellps=WGS84 +units=m"
+elev <- st_read("/Users/charlotteuden/Desktop/trees/LPJ-GUESS/srtm.shp")
+st_geometry_type(elev)
+plot(elev)
+ras = raster(elev)
+
+
+demo <- st_read("/Users/charlotteuden/Desktop/trees/LPJ-GUESS/srtm.shp") # Creates a SpatialPolygonsDataFrame class (sp)
+r <- raster(ncol=2, nrow=1)
+extent(r) <- extent(demo)
+

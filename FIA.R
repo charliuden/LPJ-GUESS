@@ -150,7 +150,7 @@ speciesNamesFIA <- function(table=x){
 }
 #------------------------------
 
-vtTrees4 <- speciesNamesFIA(table=vtTrees4)
+vtTrees4 <- speciesNamesFIA(table=vtTrees3)
 head(vtTrees4)
 
 
@@ -195,9 +195,57 @@ vtTreesTime2 <- ggplot(vtTrees7, aes(x=INVYR, y=log(sum.BA), fill=SPCD)) +
 vtTreesTime2
 
 
-#This plot would also make more sense if, rather than total basal area for each species, it was proportion of basal area. First I'll make a column of total basal area for each year. and then I can use that to calculate the proporiton for each species. 
+#This plot would also make more sense if, rather than total basal area for each species, it was proportion of basal area. (witness tree dataset is proportion of a tally)
+vtTrees7
 
+#vtTrees7[is.na(vtTrees7)] <- 0 #replace NA values with 0
 
+#for year=1997 in vtTrees7, sum 'sum.BA'
 
+library(plyr)  
+vtTrees8 <- ddply(vtTrees7,.(INVYR),transform,prop=sum.BA/sum(sum.BA))
 
+#color palett for my plot
+chiz <- c("#ef8834","#efb734", "#2366d1", "#05723e", "#069b7d","#cc2d0a", "#4f6496", "#99501d", "#bbeaed", "#f7c640", "#8cdcea", "#8c991d", 
+          "#651bf8", #purple
+          "#ccf81b", #lime green
+          "#f86c1b", #orange
+          "#1bc1f8", #lighter blue
+          "#ef95da", #light pink
+          "#6ceaa0", #mint
+          "#133d86", #dark blue
+          "#862113", #rusty red
+          "#e6a014", #mustard
+          "#487231") #darker green
 
+vtTreesTime3 <- ggplot(vtTrees8, aes(x=INVYR, y=prop, fill=SPCD)) +
+  geom_area(alpha=1) +
+  scale_fill_manual(values=chiz) +
+  ggtitle("Proportion of Basal Area by Species, VT")
+
+vtTreesTime3
+
+k# I think this plot looks weird after the year 2000 because some plots were not re-inventories, which is why you end up with NA's. So, I need to remove not just years whose plots have an NA, but all data that is associates with that plot. I need to go back to vtTrees 4 and do this:
+
+anyNA(vtTrees4)
+
+vtTrees9 <- ddply(vtTrees4,.(INVYR),transform,prop=sum.BA/sum(sum.BA))
+
+anyNA(vtTrees4)
+44.4759° N, 73.2121° W
+?get_map
+my
+mymap = get_map(location = c(lon = -73.2, lat = 44.5))
+ggmap(mymap)
+myMap <- get_map(location = "Boulder, Colorado",
+                 source = "google",
+                 maptype = "terrain", crop = FALSE,
+                 zoom = 6)
+register_google("AIzaSyDrsPTFtGFB-T4qas7F5Z_pvvPjjcKqKog")
+# plot map
+ggmap(myMap) +
+  
+myMap
+ggmap(myMap)
+install.packages("maps")
+library(ggmap)
