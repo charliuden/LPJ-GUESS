@@ -45,6 +45,10 @@ outputCleanUp <- function(table=matrix(data=rep(0, 64), ncol=16)){
 anpp <- outputCleanUp(table=anpp)
 head(anpp)
 
+#The only global PFT's that show up in new england are: BNE, BINE, TeBS, IBS and C3G, so will subset dataset to include only these PFT's:
+
+anpp <- select(anpp, Lon, Lat, year, BNE, BINE, TeBS, IBS, C3G, Total)
+
 
 #BNE for 1901 (boreal needleleaf evergreen shade tolerant)
 BNE1901anpp <- ggplot(filter(anpp, year == 1901) , mapping=aes(x=Lon, y=Lat, color=BNE)) + 
@@ -67,7 +71,7 @@ BNE2014anpp <- ggplot(filter(anpp, year == 2014) , mapping=aes(x=Lon, y=Lat, col
 # OUTPUTS: 3 column table: year, PFT, sum of annual net primary produciton of all coordinate points in that year. 
 #------------------------------
 PFTmelt <- function(table=x){
-  table <- melt(data = table, id.vars = "year", measure.vars = c('BNE',  'BINE', 'BNS', 'TeNE', 'TeBS', 'IBS', 'TeBE', 'TrBE', 'TrIBE', 'TrBR',   'C3G', 'C4G'))
+  table <- melt(data = table, id.vars = "year", measure.vars = c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G'))
   table <- with(table, aggregate(value, by = list(year, variable), 
                                  FUN = "sum")) #find sum of anpp for that PFT across all coordinate points
   names(table) <- c("year", "PFT", "sum.value") #rename columns
@@ -77,26 +81,30 @@ PFTmelt <- function(table=x){
 
 anppMelt <- PFTmelt(table=anpp)
 
-chiz <- c("#ef8834","#efb734", "#2366d1", "#05723e", "#069b7d","#cc2d0a", "#4f6496", "#99501d", "#bbeaed", "#f7c640", "#8cdcea", "#8c991d") #color palett for my plot
+#chiz <- c("#8cdcea", "#8c991d", "#2366d1",  "#069b7d","#efb734","#cc2d0a", "#4f6496", "#99501d", "#bbeaed", "#f7c640", "#05723e", "#ef8834") #color palett for all global PFT's
+
+chiz <- c('#1E7CF7', "#05723e", "#efb734", "#cc2d0a", "#8c991d")
 
 anppTime <- ggplot(anppMelt, aes(x=year, y=sum.value, fill=PFT)) +
   geom_area(alpha=1) +
   scale_fill_manual(values=chiz) +
-  ggtitle("anual net primary production")
+  ggtitle("Annual net primary production: Global PFT's") +
+  ylab("annual net primary production") 
 
+anppTime
 
 #Spatial representation of species composition for 1901 and 2014
 
 map1901anpp <- ggplot() + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G')) +
   coord_fixed() + 
-  #scale_fill_manual(values=chiz) + 
+  scale_fill_manual(values=chiz) + 
   ggtitle("1901: anual net primary production")
 
 map2014anpp <- ggplot() + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 2014), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G')) +
   coord_fixed() + 
-  #scale_fill_manual(values=chiz) + 
+  scale_fill_manual(values=chiz) + 
   ggtitle("2014: anual net primary production")
 
 BNE1901anpp

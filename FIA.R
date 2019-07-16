@@ -225,7 +225,7 @@ vtTreesTime3 <- ggplot(vtTrees8, aes(x=INVYR, y=prop, fill=SPCD)) +
 
 vtTreesTime3
 
-k# I think this plot looks weird after the year 2000 because some plots were not re-inventories, which is why you end up with NA's. So, I need to remove not just years whose plots have an NA, but all data that is associates with that plot. I need to go back to vtTrees 4 and do this:
+# I think this plot looks weird after the year 2000 because some plots were not re-inventories, which is why you end up with NA's. So, I need to remove not just years whose plots have an NA, but all data that is associates with that plot. I need to go back to vtTrees 4 and do this:
 
 anyNA(vtTrees4)
 
