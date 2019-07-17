@@ -264,21 +264,33 @@ PropVTTreesTimeSum #because some plots are not re-visited, summing data makes it
 
 
 #---------------------sort species into global PFT's----------------------------------------
+#Only want to plot speceis proportions for each year
+vtTrees9 <- select(vtTrees8, INVYR, SPCD, prop)
 
-#'BNE', 'BINE', 'TeBS', 'IBS',
+vtTrees9 <- reshape(vtTrees9, idvar = "INVYR", timevar = "SPCD", direction = "wide") #Convert data to wide format, so that there is a column for each species. a row for each year
+anyNA(vtTrees9) #now dataset has NA values.
+vtTrees9[is.na(vtTrees9)] <- 0 #replace NA's with 0
 
-#add columns 
-wit <- mutate(vtTrees, 
-              BNE=Spruces+Hemlock+Fir+Cedar+Tamarack, 
-              BINE=Pines,
-              TeBS=Beech+Maples+Ashs+Basswood+Elms+Oaks+Chestnut+Ironwoods+Hickories+Cherries,
-              IBS=Birches+Poplars)
+#add columns that clump species by global PFT:
+vtTrees9 <- mutate(vtTrees9, 
+                   BNE=prop.balsamFir+prop.blackSpruce+prop.easternHemlock+prop.redSpruce+prop.whiteSpruce, 
+                   BINE=prop.northernWhiteCedar+prop.redPine+prop.whitePine,
+                   TeBS=prop.americanBasswood+prop.americanElm+prop.blackAsh+prop.burOak+prop.northernRedOak+prop.easternHophornbeam+prop.redMaple+prop.sugarMaple+prop.whiteAsh+prop.whiteOak,
+                   IBS=prop.balsamPoplar+prop.paperBirch+prop.yellowBirch)
+
+vtTrees9 <- melt(data = vtTrees9, id.vars = "INVYR", measure.vars = c('BNE',  'BINE', 'TeBS', 'IBS')) #convert data backto long format, so that there area three columns: INVY (inventory year), variabl (global PFT), value (sum of basal area for that pft in that year)
+
+
 
 PFTpalette <- c("#4169E1", #blue
                 "#69A73B", #green
                 "#FFEC66",#yellow
                 "#FF6347") #red
 
+FIApftLine <- ggplot() + geom_line(vtTrees9, mapping=aes(x=INVYR, y=value, col=variable), size=1) +
+  scale_color_manual(values=PFTpalette) +
+  ggtitle("FIA dataset, Vermont: total basal area by PFT") +
+  ylab("basal area") + xlab("year")
 
-
+FIApftLine
 

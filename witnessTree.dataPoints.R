@@ -146,8 +146,8 @@ genusComp
 
 #add columns 
 wit <- mutate(wit, 
-              BNE=Spruces+Hemlock+Fir+Cedar+Tamarack, 
-              BINE=Pines,
+              BNE=Spruces+Hemlock+Fir+Tamarack, 
+              BINE=Pines+Cedar,
               TeBS=Beech+Maples+Ashs+Basswood+Elms+Oaks+Chestnut+Ironwoods+Hickories+Cherries,
               IBS=Birches+Poplars)
 
