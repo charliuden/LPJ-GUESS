@@ -154,56 +154,52 @@ vtTrees4 <- speciesNamesFIA(table=vtTrees3)
 head(vtTrees4)
 
 
-
 #So I want to plot time by species. But this is going to be tricky because the dataset has years with speceis repeated. I want a cumulative quantity for each species for each year. I'm just going to sum basal area (BA) for now. But I can change this if there's a different variable we want to look at. 
-
 
 
 library(reshape2)
 library(tidyr)
+library(dplyr)
 
-anyNA(vtTrees4) #find out if therea are any NA values. you have to do this BEFORE you aggregate
-vtTrees5 <-  vtTrees4[complete.cases(vtTrees4[3]),] #remove NA values in BA column 
+####################
+# FUNCTION: NAremove
+# INPUTS: FIA dataset.
+# OUTPUTS: remove rows that contain NA values
+NAremove <- function(table=x){
+  table <- table[complete.cases(table[8]),]
+  return(table)
+}
+#------------------------------
+
+anyNA(vtTrees4)#find out if therea are any NA values. you have to do this BEFORE you aggregate
+vtTrees5 <- NAremove(table=vtTrees4)
 anyNA(vtTrees5)#no NA'ss!
 
-#use aggregate() to find the sum basal area for each species for each year
-vtTrees6 <- with(vtTrees5, aggregate(BA, by = list(INVYR, SPCD), 
-                                     FUN = "sum")) 
+####################
+# FUNCTION: sumBA
+# INPUTS: FIA dataset.
+# OUTPUTS: use aggregate() to find the sum basal area for each species for each year
+sumBA <- function(table=x){
+  table <- with(table, aggregate(BA, by = list(INVYR, SPCD), 
+                                    FUN = "sum")) 
+  names(table) <- c("INVYR", "SPCD", "sum.BA") #rename columns
+  return(table)
+}
+#------------------------------
 
-names(vtTrees6) <- c("INVYR", "SPCD", "sum.BA") #rename columns
-head(vtTrees6)
+vtTrees6 <- sumBA(table=vtTrees5)
 
-library(ggplot2)
-#temporal representation of PFT composition
-vtTreesTime <- ggplot(vtTrees6, aes(x=INVYR, y=log(sum.BA), fill=SPCD)) +
-  geom_area(alpha=1) +
-  #scale_fill_manual(values=chiz) +
-  ggtitle("Species Basal Area, VT")
+####################
+# FUNCTION: filterSpecies
+# INPUTS: FIA dataset.
+# OUTPUTS: use filter() to select rows that have trees found in new england
+filterSpecies <- function(table=x){
+  table <- filter(table, SPCD %in% c("americanBasswood", "americanElm", "balsamFir", "blackAsh", "blackCherry", "blackSpruce", "burOak", "easternHemlock", "easternHophornbeam", "northernRedOak","northernWhiteCedar", "paperBirch", "balsamPoplar", "redMaple", "redPine", "sugarMaple", "whiteOak", "whitePine", "whiteSpruce", "yellowBirch", "whiteAsh", "redSpruce"))
+  return(table)
+}
+#------------------------------
 
-vtTreesTime
-
-#This is a terrible plot. A problem that really sticks out at this point is that there are a lot of speceis. It may be worth just looking at species I built PFT's for -major/more dominant over story speceis. 
-
-
-vtTrees7 <- filter(vtTrees6, SPCD %in% c("americanBasswood", "americanElm", "balsamFir", "blackAsh", "blackCherry", "blackSpruce", "burOak", "easternHemlock", "easternHophornbeam", "northernRedOak","northernWhiteCedar", "paperBirch", "balsamPoplar", "redMaple", "redPine", "sugarMaple", "whiteOak", "whitePine", "whiteSpruce", "yellowBirch", "whiteAsh", "redSpruce"))
-
-vtTreesTime2 <- ggplot(vtTrees7, aes(x=INVYR, y=log(sum.BA), fill=SPCD)) +
-  geom_area(alpha=1) +
-  #scale_fill_manual(values=chiz) +
-  ggtitle("Species Basal Area, VT")
-
-vtTreesTime2
-
-
-#This plot would also make more sense if, rather than total basal area for each species, it was proportion of basal area. (witness tree dataset is proportion of a tally)
-vtTrees7
-
-#vtTrees7[is.na(vtTrees7)] <- 0 #replace NA values with 0
-
-#for year=1997 in vtTrees7, sum 'sum.BA'
-
-library(plyr)  
-vtTrees8 <- ddply(vtTrees7,.(INVYR),transform,prop=sum.BA/sum(sum.BA))
+vtTrees7 <- filterSpecies(table=vtTrees6)
 
 #color palett for my plot
 chiz <- c("#ef8834","#efb734", "#2366d1", "#05723e", "#069b7d","#cc2d0a", "#4f6496", "#99501d", "#bbeaed", "#f7c640", "#8cdcea", "#8c991d", 
@@ -218,34 +214,71 @@ chiz <- c("#ef8834","#efb734", "#2366d1", "#05723e", "#069b7d","#cc2d0a", "#4f64
           "#e6a014", #mustard
           "#487231") #darker green
 
-vtTreesTime3 <- ggplot(vtTrees8, aes(x=INVYR, y=prop, fill=SPCD)) +
+VTTreesTimeLine <- ggplot(vtTrees7, aes(x=INVYR, y=sum.BA, col=SPCD)) +
+  geom_line(size=1) +
+  scale_color_manual(values=chiz) +
+  ggtitle("FIA dataset: Total Basal Area by Species, VT")
+
+VTTreesTimeLine
+
+#rather than total basal area for each species, we may want proportion of basal area (witness tree dataset is proportion of a tally):
+
+library(plyr)
+
+####################
+# FUNCTION: proportionSpecies
+# INPUTS: FIA dataset.
+# OUTPUTS: make a column of species proportion of basal area
+filterSpecies <- function(table=x){
+  table <- ddply(table,.(INVYR),transform,prop=sum.BA/sum(sum.BA))
+  return(table)
+}
+#------------------------------
+
+
+vtTrees8 <- filterSpecies(table=vtTrees7)
+
+
+
+
+PropVTTreesTimeArea <- ggplot(vtTrees8, aes(x=INVYR, y=prop, fill=SPCD)) +
   geom_area(alpha=1) +
   scale_fill_manual(values=chiz) +
-  ggtitle("Proportion of Basal Area by Species, VT")
+  ggtitle("FIA dataset: Proportion of Basal Area by Species, VT")
 
-vtTreesTime3
+PropVTTreesTimeArea #pretty, but doesn't show increas/decrease of individual species very well. 
 
-# I think this plot looks weird after the year 2000 because some plots were not re-inventories, which is why you end up with NA's. So, I need to remove not just years whose plots have an NA, but all data that is associates with that plot. I need to go back to vtTrees 4 and do this:
+PropVTTreesTimeProp <- ggplot(vtTrees8, aes(x=INVYR, y=prop, col=SPCD)) +
+  geom_line(size=1) +
+  scale_color_manual(values=chiz) +
+  ggtitle("FIA dataset: Proportion of Basal Area by Species, VT")
 
-anyNA(vtTrees4)
+PropVTTreesTimeProp
 
-vtTrees9 <- ddply(vtTrees4,.(INVYR),transform,prop=sum.BA/sum(sum.BA))
+PropVTTreesTimeSum <- ggplot(vtTrees8, aes(x=INVYR, y=sum.BA, col=SPCD)) +
+  geom_line(size=1) +
+  scale_color_manual(values=chiz) +
+  ggtitle("FIA dataset: Sum of Basal Area by Species, VT")
 
-anyNA(vtTrees4)
-44.4759° N, 73.2121° W
-?get_map
-my
-mymap = get_map(location = c(lon = -73.2, lat = 44.5))
-ggmap(mymap)
-myMap <- get_map(location = "Boulder, Colorado",
-                 source = "google",
-                 maptype = "terrain", crop = FALSE,
-                 zoom = 6)
-register_google("AIzaSyDrsPTFtGFB-T4qas7F5Z_pvvPjjcKqKog")
-# plot map
-ggmap(myMap) +
-  
-myMap
-ggmap(myMap)
-install.packages("maps")
-library(ggmap)
+PropVTTreesTimeSum #because some plots are not re-visited, summing data makes it look like basal area devreased -which maybe it did (development etc.) but we are already comparing proportions for ht eFIA dataset and the witness tree data set. so a sum makes less sense. 
+
+
+#---------------------sort species into global PFT's----------------------------------------
+
+#'BNE', 'BINE', 'TeBS', 'IBS',
+
+#add columns 
+wit <- mutate(vtTrees, 
+              BNE=Spruces+Hemlock+Fir+Cedar+Tamarack, 
+              BINE=Pines,
+              TeBS=Beech+Maples+Ashs+Basswood+Elms+Oaks+Chestnut+Ironwoods+Hickories+Cherries,
+              IBS=Birches+Poplars)
+
+PFTpalette <- c("#4169E1", #blue
+                "#69A73B", #green
+                "#FFEC66",#yellow
+                "#FF6347") #red
+
+
+
+

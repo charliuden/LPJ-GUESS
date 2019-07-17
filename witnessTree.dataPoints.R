@@ -64,14 +64,26 @@ rich_log_base <- ggplot(wit, aes(x=logTrees, y=richness)) +
 rich_base  
 rich_log_base 
 
+#----------------------State Boundary Map------------------------------------
 
-map_richness <- ggplot(wit, mapping=aes(x=Long., y=Lat., color=richness)) +
-  geom_point(size=4, alpha=0.9) 
-  scale_color_gradient(low="yellow",high="blue") +
+states <- map_data("state")#turn state line map into data frame
+northeast <- subset(states, region %in% c("vermont", "new hampshire", "connecticut", "maine", "rhode island", "massachusetts", "new york"))#subest new england states
+
+#map with states and lpj-guess output: cmass
+
+map <- ggplot() + 
+  geom_polygon(data = northeast, aes(x=long, y = lat, group = group), fill='gray60', color='white') +
+  coord_fixed(1.3) 
+#----------------------------------------------------------------------------
+
+
+
+map_richness <- map + 
+  geom_point(wit, mapping=aes(x=Long., y=Lat., color=richness), size=4, alpha=0.9) +scale_color_gradient(low="yellow",high="blue") +
   ggtitle("Witness Tree Data: Number of Species Sampled")
 
-map_sample <- ggplot(wit, mapping=aes(x=Long., y=Lat., color=logTrees)) +
-  geom_point(size=4, alpha=0.9) + 
+map_sample <- map +
+  geom_point(wit, mapping=aes(x=Long., y=Lat., color=logTrees), size=4, alpha=0.9) + 
   scale_color_gradient(low="yellow",high="blue") +
   ggtitle("Witness Tree Data: Sampel Size")
 
@@ -120,11 +132,48 @@ chiz <- c("#ef8834", #orange
 library(scatterpie) #make map of pie charts
 
 
-genusComp <- ggplot() + 
-  geom_scatterpie(aes(x=Long., y=Lat.), data=wit2, cols=c("Beech", "Maples", "Birches", "Ashs", "Hemlock", "Basswood", "Elms", "Pines", "Hickories", "Spruces", "Fir", "Cedar", "Oaks", "Chestnut", "Ironwoods", "Poplars", "Tamarack", "Cherries")) +
+genusComp <- map + 
+  geom_scatterpie(aes(x=Long., y=Lat., r=0.08), data=wit2, cols=c("Beech", "Maples", "Birches", "Ashs", "Hemlock", "Basswood", "Elms", "Pines", "Hickories", "Spruces", "Fir", "Cedar", "Oaks", "Chestnut", "Ironwoods", "Poplars", "Tamarack", "Cherries")) +
   coord_fixed() + 
   scale_fill_manual(values=chiz) + 
   ggtitle("Witness Trees Genus Proportions")
 
 genusComp
+
+
+#---------------------convert genus columns to PFT's----------------------------------------------
+#'BNE', 'BINE', 'TeBS', 'IBS',
+
+#add columns 
+wit <- mutate(wit, 
+              BNE=Spruces+Hemlock+Fir+Cedar+Tamarack, 
+              BINE=Pines,
+              TeBS=Beech+Maples+Ashs+Basswood+Elms+Oaks+Chestnut+Ironwoods+Hickories+Cherries,
+              IBS=Birches+Poplars)
+
+PFTpalette <- c("#4169E1", #blue
+                "#69A73B", #green
+                "#FFEC66",#yellow
+                "#FF6347") #red
+
+witPFT <- map + 
+  geom_scatterpie(aes(x=Long., y=Lat., r=0.08), data=wit, cols=c('BNE', 'BINE', 'TeBS', 'IBS'), size=0.25) +
+  coord_fixed() + 
+  scale_fill_manual(values=PFTpalette) + 
+  ggtitle("Witness Trees organsed by global PFT's")
+
+witPFT
+
+
+
+
+ggplot(data=wit, mapping=aes(x=Lat., y=Long., size=Te, col='blue', alpha=0.25)) + geom_point() 
+
+ggplot(data=wit, mapping=aes(x=Lat., y=Long., fill=Beech, col='blue', alpha=0.25)) + 
+  stat_density2d()
+
+ggplot() + stat_density2d(aes(x = Long., y = Lat., fill = Beech, alpha = 0.1), size = 0.01, bins = 8, data =wit, geom = "polygon") 
+
+
+
 

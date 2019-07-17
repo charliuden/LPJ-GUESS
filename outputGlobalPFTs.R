@@ -14,14 +14,28 @@
 
 #https://github.com/joergsteinkamp/RLPJGUESS -this might be useful (someone else's code for dealing with lpj-guess output)
 
-#-----------------------------------------------------------------------------
-##-----------anpp: Annual Net Pimary Production-------------------------------
-
 library(dplyr)
 library(ggplot2)
 library(reshape2) #use melt function
 library(scatterpie) #make map of pie charts
+library(tmap)
+library(mapdata)
+library(maps)
+library(ggmap)
 
+#----------------------State Boundary Map------------------------------------
+
+states <- map_data("state")#turn state line map into data frame
+northeast <- subset(states, region %in% c("vermont", "new hampshire", "connecticut", "maine", "rhode island", "massachusetts", "new york"))#subest new england states
+
+#map with states and lpj-guess output: cmass
+
+map <- ggplot() + 
+  geom_polygon(data = northeast, aes(x=long, y = lat, group = group), fill='gray60', color='white') +
+  coord_fixed(1.3) 
+
+#-----------------------------------------------------------------------------
+##-----------anpp: Annual Net Pimary Production-------------------------------
 
 
 anpp <- read.table("/Users/charlotteuden/Desktop/trees/LPJ-GUESS/NewEngland_lpj-guessTestRun/anpp.out", stringsAsFactors=FALSE)
@@ -47,7 +61,7 @@ head(anpp)
 
 #The only global PFT's that show up in new england are: BNE, BINE, TeBS, IBS and C3G, so will subset dataset to include only these PFT's:
 
-anpp <- select(anpp, Lon, Lat, year, BNE, BINE, TeBS, IBS, C3G, Total)
+anpp <- select(anpp, Lon, Lat, year, BNE, BINE, TeBS, IBS, Total)
 
 
 #BNE for 1901 (boreal needleleaf evergreen shade tolerant)
@@ -71,7 +85,7 @@ BNE2014anpp <- ggplot(filter(anpp, year == 2014) , mapping=aes(x=Lon, y=Lat, col
 # OUTPUTS: 3 column table: year, PFT, sum of annual net primary produciton of all coordinate points in that year. 
 #------------------------------
 PFTmelt <- function(table=x){
-  table <- melt(data = table, id.vars = "year", measure.vars = c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G'))
+  table <- melt(data = table, id.vars = "year", measure.vars = c('BNE',  'BINE', 'TeBS', 'IBS'))
   table <- with(table, aggregate(value, by = list(year, variable), 
                                  FUN = "sum")) #find sum of anpp for that PFT across all coordinate points
   names(table) <- c("year", "PFT", "sum.value") #rename columns
@@ -83,35 +97,55 @@ anppMelt <- PFTmelt(table=anpp)
 
 #chiz <- c("#8cdcea", "#8c991d", "#2366d1",  "#069b7d","#efb734","#cc2d0a", "#4f6496", "#99501d", "#bbeaed", "#f7c640", "#05723e", "#ef8834") #color palett for all global PFT's
 
-chiz <- c('#1E7CF7', "#05723e", "#efb734", "#cc2d0a", "#8c991d")
+        #need to make a color palette that reflects global PFT's: 
+              #green: BINE :boreal needle leaved everfreen shade intolerant
+              #blue: BNE: boreal needleleaf evergreen shade tolerant 
+              #yellow: TeBS: temperate broadleaf summergreen shade tolerant
+              #red: IBS: boreal/temperate broadleaf summergreen shade intolerant
 
-anppTime <- ggplot(anppMelt, aes(x=year, y=sum.value, fill=PFT)) +
+PFTpalette <- c("#4169E1", #blue
+                "#69A73B", #green
+                "#FFEC66", #yellow
+                "#FF6347") #red
+
+
+anppTimeArea <- ggplot(anppMelt, aes(x=year, y=sum.value, fill=PFT)) +
   geom_area(alpha=1) +
-  scale_fill_manual(values=chiz) +
-  ggtitle("Annual net primary production: Global PFT's") +
+  scale_fill_manual(values=PFTpalette) +
+  ggtitle("LPJ-GUESS output: annual net primary production") +
   ylab("annual net primary production") 
 
-anppTime
+anppTimeArea
+
+anppTimeLine <- ggplot(anppMelt, aes(x=year, y=sum.value, col=PFT)) +
+  geom_line(size=1) +
+  scale_color_manual(values=PFTpalette)+
+  ggtitle("LPJ-GUESS output: annual net primary production") +
+  ylab("annual net primary production") 
+
+anppTimeLine
 
 #Spatial representation of species composition for 1901 and 2014
 
-map1901anpp <- ggplot() + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G')) +
+map1901anpp <- map + 
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
   coord_fixed() + 
-  scale_fill_manual(values=chiz) + 
-  ggtitle("1901: anual net primary production")
+  scale_fill_manual(values=PFTpalette) + 
+  ggtitle("LPJ-GUESS output: anual net primary production 1901")
 
-map2014anpp <- ggplot() + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G')) +
+map2014anpp <- map + 
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
   coord_fixed() + 
-  scale_fill_manual(values=chiz) + 
-  ggtitle("2014: anual net primary production")
+  scale_fill_manual(values=PFTpalette) + 
+  ggtitle("LPJ-GUESS output: anual net primary production 2014")
 
 BNE1901anpp
 BNE2014anpp
 map1901anpp
 map2014anpp
-anppTime
+anppTimeArea
+anppTimeLine
+
 
 #-----------------------------------------------------------------------------
 ##------------------cmass: Carbon Mass------------------------
@@ -127,29 +161,40 @@ cmass <- read.table("NewEngland_lpj-guessTestRun/cmass.out", stringsAsFactors=FA
 cmass <- outputCleanUp(table=cmass)
 cmassMelt <- PFTmelt(table=cmass) #data arrangement appropriate for temporal visualization 
 
-#temporal representation of PFT composition
-cmassTime <- ggplot(cmassMelt, aes(x=year, y=sum.value, fill=PFT)) +
+#temporal representation of PFT composition with geom_area
+cmassTimeArea <- ggplot(cmassMelt, aes(x=year, y=sum.value, fill=PFT)) +
   geom_area(alpha=1) +
-  scale_fill_manual(values=chiz) +
-  ggtitle("carbon mass")
+  scale_fill_manual(values=PFTpalette) +
+  ggtitle("LPJ-GUESS output: carbon mass") +
+  ylab("carbon mass") 
 
+cmassTimeArea
+
+cmassTimeLine <- ggplot(cmassMelt, aes(x=year, y=sum.value, col=PFT)) +
+  geom_line(size=1) +
+  scale_color_manual(values=PFTpalette)+
+  ggtitle("LPJ-GUESS output: carbon mass") +
+  ylab("carbon mass") 
+
+cmassTimeLine
 
 #Spatial representation of PFT composition
-map1901cmass <- ggplot() + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
+map1901cmass <- map + 
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
   coord_fixed() + 
-  #scale_fill_manual(values=chiz) + 
-  ggtitle("1901: carbon mass")
+  scale_fill_manual(values=PFTpalette) + 
+  ggtitle("LPJ-GUESS output: carbon mass 1901")
 
-map2014cmass <- ggplot() + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 2014), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
+map2014cmass <- map + 
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
   coord_fixed() + 
-  #scale_fill_manual(values=chiz) + 
-  ggtitle("2014: carbon mass")
+  scale_fill_manual(values=PFTpalette) + 
+  ggtitle("LPJ-GUESS output: carbon mass 2014")
 
 map1901cmass
 map2014cmass
-cmassTime
+cmassTimeArea
+cmassTimeLine
 
 #-----------------------------------------------------------------------------
 ##--------------------cpool: Carbon Pool--------------------
@@ -202,13 +247,13 @@ ggtitle("Carbon Pool")#not that interesting
 
 
 #Spatial representation of PFT composition
-map1901cpool <- ggplot() + 
+map1901cpool <- map + 
 geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cpool, year == 1901), cols=c("VegC","LitterC","SoilC")) +
 coord_fixed() + 
 #scale_fill_manual(values=chiz) + 
 ggtitle("1901: carbon pools")
 
-map2014cpool <- ggplot() + 
+map2014cpool <- map + 
 geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cpool, year == 2014), cols=c("VegC","LitterC","SoilC")) +
 coord_fixed() + 
 #scale_fill_manual(values=chiz) + 
@@ -240,13 +285,13 @@ ggtitle("dens.out")
 
 
 #Spatial representation of PFT composition
-map1901dens <- ggplot() + 
+map1901dens <- map + 
 geom_scatterpie(aes(x=Lon, y=Lat), data=filter(dens, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
 coord_fixed() + 
 #scale_fill_manual(values=chiz) + 
 ggtitle("1901: dens.out")
 
-map2014dens <- ggplot() + 
+map2014dens <- map + 
 geom_scatterpie(aes(x=Lon, y=Lat), data=filter(dens, year == 2014), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
 coord_fixed() + 
 #scale_fill_manual(values=chiz) + 
@@ -302,19 +347,20 @@ firertMelt <- firertmelt(table=firert)
 #temporal representation of PFT composition
 firertTime <- ggplot(firertMelt, aes(x=year, y=mean.firert)) +
 geom_line() +
-ggtitle("Mean FireRT")
+ggtitle("LPF-GUESS output: Mean Fire Return Time") +
+  xlab("year") + ylab("mean fire return time (years)")
 
 
 #Spatial representation of PFT composition
-firert1901 <- ggplot(filter(firert, year == 1901) , mapping=aes(x=Lon, y=Lat, color=FireRT)) + 
-geom_point(size=10, alpha=0.9) + 
-ggtitle("FireRT for 1901") +
-scale_color_gradient(low="yellow", high="blue")
+firert1901 <- map + 
+  geom_point(filter(firert, year == 1901) , mapping=aes(x=Lon, y=Lat, color=FireRT), size=12, alpha=0.75) + scale_color_gradient(low="yellow", high="blue") + 
+  ggtitle("LPJ-GUESS output: Fire Return Time 1901") + 
+  scale_color_gradient(low="yellow", high="blue")
 
-firert2014 <- ggplot(filter(firert, year == 2014) , mapping=aes(x=Lon, y=Lat, color=FireRT)) + 
-geom_point(size=10, alpha=0.9) + 
-ggtitle("FireRT for 2014") +
-scale_color_gradient(low="yellow", high="blue")
+firert2014 <- map +
+  geom_point(filter(firert, year == 2014), mapping=aes(x=Lon, y=Lat, color=FireRT), size=12, alpha=0.75) + 
+  ggtitle("LPJ-GUESS output: Fire Return Time 2014") +
+  scale_color_gradient(low="yellow", high="blue")
 
 
 firert1901
@@ -369,13 +415,13 @@ heightTime <- ggplot(heightMelt, aes(x=year, y=mean.value, fill=PFT)) +
 
 
 #Spatial representation of PFT composition
-map1901height <- ggplot() + 
+map1901height <- map + 
   geom_scatterpie(aes(x=Lon, y=Lat), data=filter(height, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
   coord_fixed() + 
   #scale_fill_manual(values=chiz) + 
   ggtitle("1901: height")
 
-map2014height <- ggplot() + 
+map2014height <- map + 
   geom_scatterpie(aes(x=Lon, y=Lat), data=filter(height, year == 2014), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G')) +
   coord_fixed() + 
   #scale_fill_manual(values=chiz) + 
@@ -384,6 +430,9 @@ map2014height <- ggplot() +
 map1901height
 map2014height
 heightTime
+
+
+
 
 #-----------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------
@@ -397,21 +446,65 @@ library(maps)
 library(ggplot2)
 library(dplyr)
 
-#----------------------State Boundaries------------------------------------------------------
 
-states <- map_data("state")#turn state line map into data frame
-northeast <- subset(states, region %in% c("vermont", "new hampshire", "connecticut", "maine", "rhode island", "massachusetts", "new york"))#subest new england states
 
-#map with states and lpj-guess output: anpp
-map <- ggplot() + 
-  geom_polygon(data = northeast, aes(x=long, y = lat, group = group), fill='gray70', color='white') +
-  coord_fixed(1.3) +
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE','BINE','BNS','TeNE','TeBS','IBS','TeBE','TrBE','TrIBE','TrBR','C3G','C4G'), color='white') +
+#----------------------ggmap------------------------------------------------------
+
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(ggrepel)
+library(tidyverse)
+
+library(ggmap)
+
+
+NE <- c(left = -80, bottom = 40, right = -66, top = 48)
+NEmap <- ggmap(get_stamenmap(NE, maptype = "terrain", color="color"))
+
+NEmap2 <- ggmap(get_map(location=NE, source="stamen", maptype="toner-lite", crop=FALSE))
+
+
+# USE WITH GGPLOT
+
+NEmap2 +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS', 'C3G')) +
   coord_fixed() + 
   scale_fill_manual(values=chiz) + 
   ggtitle("1901: anual net primary production")
 
-map
+NEmap2 + stat_density2d(
+  aes(x = Lon, y = Lat, fill = "BNE", alpha = 0.05),
+  size = 0.01, bins = , data = anpp,
+  geom = "polygon") #+
+geom_point(aes(x = x, y = y, stroke = 2), colour="BNE", data = anpp$BNE, size =1.5) + 
+  geom_label_repel(
+    aes(x, y, label = label),
+    data=anpp,
+    family = 'Times', 
+    size = 3, 
+    box.padding = 0.2, point.padding = 0.3,
+    segment.color = 'grey50') 
+
+
+density <- ggplot() + geom_density_2d(filter(anpp, year == 2014) , mapping=aes(x=Lon, y=Lat, color=BNE), bins = 30) #+ 
+  geom_point(size=10, alpha=0.9) + 
+  scale_color_gradient(low="yellow", high="blue")
+
+density + stat_density2d()
+
+ggplot(data=anpp, mapping=aes(x=Lon, y=Lat, size=BNE, alpha=0.25), bins=10) + geom_point() 
+
+ggplot() + stat_density2d(aes(x = Lon, y = Lat, fill=BNE, alpha = 0.1), size = 0.01, bins = 30, data =anpp, geom = "polygon") 
+  
+  
+  
+
+
+
+
+
 
 #--------------converting data frames to a structural feature (sf) object---------------------------
 
