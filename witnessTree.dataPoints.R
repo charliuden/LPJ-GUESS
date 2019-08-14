@@ -1,26 +1,73 @@
 
 
 #---
- #New England Forest Composition at the time of European Settlement
+#Forest Composition in the Northeastern United States at the time of European Settlement
 #Charlotte Uden
 #5/10/2019
 #---
-  
-wit <- read.csv("witness_tree/583NewEngland%.csv")
+
 library(mapdata)
 library(maps)
 library(ggplot2)
 library(dplyr)
+  
+NE <- read.csv("witness_tree/583NewEngland%.csv")
+NY <- read.csv("witness_tree/NY%327presett.csv")
+
+#change 'X' colname to 'unit' in NY dataset
+NY <- rename(NY, unit = X)
+
+#remove 'other' column for NY dataset
+NY <- select(NY, Ver..2010.09:Magnolia)
+
+#remove % character from values in NY dataset
+cleanUp <- function(data=x){
+  data <- as.character(data) #convert elements in the column to characters
+  data <- substr(data,1,nchar(data)-1) #remove the last character for all elements in the column
+  data <- as.numeric(data) #convert from character to numeric data
+  return(data)
+}
+NY$Beech <- cleanUp(data=NY$Beech)
+NY$Maples <- cleanUp(data=NY$Maples)
+NY$Birches <- cleanUp(data=NY$Birches)
+NY$Ashs <- cleanUp(data=NY$Ashs)
+NY$Hemlock <- cleanUp(data=NY$Hemlock)
+NY$Basswood <- cleanUp(data=NY$Basswood)
+NY$Elms <- cleanUp(data=NY$Elms)
+NY$Pines <- cleanUp(data=NY$Pines)
+NY$Hickories <- cleanUp(data=NY$Hickories)
+NY$Spruces <- cleanUp(data=NY$Spruces)
+NY$Fir <- cleanUp(data=NY$Fir)
+NY$Cedar <- cleanUp(data=NY$Cedar)
+NY$Oaks <- cleanUp(data=NY$Oaks)
+NY$Chestnut <- cleanUp(data=NY$Chestnut)
+NY$Ironwoods <- cleanUp(data=NY$Ironwoods)
+NY$Poplars <- cleanUp(data=NY$Poplars)
+NY$Tamarack <- cleanUp(data=NY$Tamarack)
+NY$Cherries <- cleanUp(data=NY$Cherries)
+NY$Chamae.is <- cleanUp(data=NY$Chamae.is)
+NY$Nyssa <- cleanUp(data=NY$Nyssa)
+NY$Juglans <- cleanUp(data=NY$Juglans)
+NY$Buttonwood <- cleanUp(data=NY$Buttonwood)
+NY$Liriodendron <- cleanUp(data=NY$Liriodendron)
+NY$Magnolia <- cleanUp(data=NY$Magnolia)
+
+#rbind new england and new york datasets:
+wit <- rbind(NE, NY)
+
+wit2 <- lapply(wit[,7:30], as.numeric)
+
+str(wit)
 
 states <- map_data("state")#turn state line map into data frame
-new_england <- subset(states, region %in% c("vermont", "new hampshire", "connecticut", "maine", "rhode island", "massachusetts"))#subest new england states
+new_england <- subset(states, region %in% c("vermont", "new hampshire", "connecticut", "maine", "rhode island", "massachusetts", "new york"))#subest new england states
 
 #points are the center most point of the town, plotted over map of new england:
 ggplot() + 
   geom_polygon(data = new_england, aes(x=long, y = lat, group = group)) +
   coord_fixed(1.3) +
   geom_point(data=wit, aes(x=Long.,y=Lat.)) +
-  ggtitle("Witness Tree Dataset: center point of 583 towns in New england")
+  ggtitle("Witness Tree Dataset: center point of 910 towns in the Northeastern United States")
 
 
 #--------------------------------------------------------------------------------------------------
@@ -133,7 +180,7 @@ library(scatterpie) #make map of pie charts
 
 
 genusComp <- map + 
-  geom_scatterpie(aes(x=Long., y=Lat., r=0.08), data=wit2, cols=c("Beech", "Maples", "Birches", "Ashs", "Hemlock", "Basswood", "Elms", "Pines", "Hickories", "Spruces", "Fir", "Cedar", "Oaks", "Chestnut", "Ironwoods", "Poplars", "Tamarack", "Cherries")) +
+  geom_scatterpie(aes(x=Long., y=Lat., r=0.08), data=wit2, cols=c("Beech", "Maples", "Birches", "Ashs", "Hemlock", "Basswood", "Elms", "Pines", "Hickories", "Spruces", "Fir", "Cedar", "Oaks", "Chestnut", "Ironwoods", "Poplars", "Tamarack", "Cherries"), color=NA) +
   coord_fixed() + 
   scale_fill_manual(values=chiz) + 
   ggtitle("Witness Trees Genus Proportions")
@@ -157,7 +204,7 @@ PFTpalette <- c("#4169E1", #blue
                 "#FF6347") #red
 
 witPFT <- map + 
-  geom_scatterpie(aes(x=Long., y=Lat., r=0.08), data=wit, cols=c('BNE', 'BINE', 'TeBS', 'IBS'), size=0.25) +
+  geom_scatterpie(aes(x=Long., y=Lat., r=0.08), data=wit, cols=c('BNE', 'BINE', 'TeBS', 'IBS'), color=NA) +
   coord_fixed() + 
   scale_fill_manual(values=PFTpalette) + 
   ggtitle("Witness Trees organsed by global PFT's")
@@ -165,14 +212,6 @@ witPFT <- map +
 witPFT
 
 
-
-
-ggplot(data=wit, mapping=aes(x=Lat., y=Long., size=Te, col='blue', alpha=0.25)) + geom_point() 
-
-ggplot(data=wit, mapping=aes(x=Lat., y=Long., fill=Beech, col='blue', alpha=0.25)) + 
-  stat_density2d()
-
-ggplot() + stat_density2d(aes(x = Long., y = Lat., fill = Beech, alpha = 0.1), size = 0.01, bins = 8, data =wit, geom = "polygon") 
 
 
 

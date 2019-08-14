@@ -128,13 +128,13 @@ anppTimeLine
 #Spatial representation of species composition for 1901 and 2014
 
 map1901anpp <- map + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS'), color=NA) +
   coord_fixed() + 
   scale_fill_manual(values=PFTpalette) + 
   ggtitle("LPJ-GUESS output: anual net primary production 1901")
 
 map2014anpp <- map + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(anpp, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS'), color=NA) +
   coord_fixed() + 
   scale_fill_manual(values=PFTpalette) + 
   ggtitle("LPJ-GUESS output: anual net primary production 2014")
@@ -180,13 +180,13 @@ cmassTimeLine
 
 #Spatial representation of PFT composition
 map1901cmass <- map + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 1901), cols=c('BNE',  'BINE', 'TeBS', 'IBS'), color=NA) +
   coord_fixed() + 
   scale_fill_manual(values=PFTpalette) + 
   ggtitle("LPJ-GUESS output: carbon mass 1901")
 
 map2014cmass <- map + 
-  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS')) +
+  geom_scatterpie(aes(x=Lon, y=Lat), data=filter(cmass, year == 2014), cols=c('BNE',  'BINE', 'TeBS', 'IBS'), color=NA) +
   coord_fixed() + 
   scale_fill_manual(values=PFTpalette) + 
   ggtitle("LPJ-GUESS output: carbon mass 2014")
